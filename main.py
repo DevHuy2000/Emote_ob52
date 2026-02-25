@@ -440,7 +440,7 @@ list_emotes = [
     909039011, 909038010, 909042008, 909041005, 909033002
 ]
 # Add You Bot UID
-BOT_UID = '14517053297'
+BOT_UID = '14515497519'
 
 # Flask Route Functions
 loop = None
@@ -534,7 +534,7 @@ def run_flask():
 
 async def MaiiiinE():
     global loop, key, iv, region
-    Uid , Pw = '4429530394','FFACC__9R7BOLA'
+    Uid , Pw = '4428998164','Senzu90_EH3UD_BY_XR_SHIVA_T6L3K'
     
 
     open_id , access_token = await GeNeRaTeAccEss(Uid , Pw)
