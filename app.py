@@ -8,6 +8,7 @@ from threading import Thread
 import DEcwHisPErMsG_pb2 , MajoRLoGinrEs_pb2 , PorTs_pb2 , MajoRLoGinrEq_pb2 , sQ_pb2 , Team_msg_pb2
 from cfonts import render, say
 from flask import Flask, request, jsonify
+from aiohttp import TCPConnector, AsyncResolver
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)  
 
@@ -215,6 +216,7 @@ class CLIENT:
         self.key = None
         self.iv = None
         self.STATUS = None
+        self.region = None
         self.AutHToKen = None
         self.OnLineiP = None
         self.OnLineporT = None
@@ -626,107 +628,8 @@ class CLIENT:
                 await asyncio.gather(task1 , task2)
 
 
-list_emotes = [
-    909040010, 909000063, 909035007, 909000085, 909000090,
-    909000098, 909045001, 909000081, 909039011, 909049010,
-    909039011, 909038010, 909042008, 909041005, 909033002
-]
-# Add You Bot UID
-BOT_UID = '14517053297'
-
-# Flask Route Functions
-loop = None
-async def perform_emote(team_code: str, uids: list, emote_list: list):
-    global key, iv, region, online_writer
-    if online_writer is None:
-        raise Exception("Bot not connected")
-    
-    #
-    random.shuffle(emote_list) 
-    
-    emote_count = 0
-
-    try:
-        # 1. Join the squad
-        EM = await GenJoinSquadsPacket(team_code, key, iv)
-        # Sử dụng online_writer để gửi packet Join Squad (OnLine)
-        await SEndPacKeT(None, online_writer, 'OnLine', EM) 
-        await asyncio.sleep(1) # Đợi bot join squad
-
-        # 2. Lặp qua tất cả Emote ID trong danh sách
-        for emote_id in emote_list:
-            # Thực hiện emote trên từng UID cho Emote ID hiện tại
-            for uid_str in uids:
-                if uid_str:  
-                    uid = int(uid_str)
-                    H = await Emote_k(uid, emote_id, key, iv, region)
-                    # Gửi packet Emote (OnLine)
-                    await SEndPacKeT(None, online_writer, 'OnLine', H)
-            
-            emote_count += 1
-            # Đợi một chút trước khi chuyển sang Emote ID tiếp theo
-            await asyncio.sleep(6.2) 
-            
-        # 3. Rời khỏi Squad sau khi hoàn thành chuỗi emote
-        E = await ExiT(None, key, iv) 
-        await SEndPacKeT(None, online_writer, 'OnLine', E)
-        await asyncio.sleep(1)
-
-        return {"status": "success", "message": f"All {emote_count} emotes performed successfully!"}
-    except Exception as e:
-        raise Exception(f"Failed to perform emotes: {str(e)}")
-
-
-@app.route('/join')
-def join_team():
-    global loop
-    team_code = request.args.get('tc')
-    uid1 = request.args.get('uid1')
-    uid2 = request.args.get('uid2')
-    uid3 = request.args.get('uid3')
-    uid4 = request.args.get('uid4')
-    uid5 = request.args.get('uid5')
-    uid6 = request.args.get('uid6')
-    
-    # 1. Kiểm tra tham số TỐI THIỂU
-    if not team_code:
-        return jsonify({"status": "error", "message": "Missing required parameter: tc"})
-
-    # 2. Gom UIDs
-    # Chỉ lấy các UID có giá trị (không phải None)
-    uids_ = [uid for uid in [uid1, uid2, uid3, uid4, uid5, uid6] if uid]
-    
-    uids = list(set(uids_ + [BOT_UID]))
-
-    if not uids:
-        return jsonify({"status": "error", "message": "At least one UID must be provided"})
-        
-    if not list_emotes:
-        return jsonify({"status": "error", "message": "Emote list is empty"})
-        
-    # 3. Gọi coroutine
-    # Truyền toàn bộ danh sách list_emotes vào hàm bất đồng bộ
-    future = asyncio.run_coroutine_threadsafe(
-        perform_emote(team_code, uids, list_emotes), loop 
-    )
-
-    return jsonify({
-        "status": "success",
-        "team_code": team_code,
-        "uids": uids,
-        "total_emote": len(list_emotes),
-        "message": "All Emote Sending Ready !",
-        "follow": "@Senzu01001"
-    })
-
-def run_flask():
-    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
-    
-
-
 
     async def MaiiiinE(self):
-        global loop, key, iv, region
         Uid , Pw = '4402722440','BY_PARAHEX-61JNBODKC-REDZED'
         
         open_id , access_token = await GeNeRaTeAccEss(Uid , Pw)
@@ -744,12 +647,15 @@ def run_flask():
         TarGeT = MajoRLoGinauTh.account_uid
         key = MajoRLoGinauTh.key
         iv = MajoRLoGinauTh.iv
-        timestamp = MajoRLoGinauTh.timestamp        
-        loop = asyncio.get_running_loop()
+        timestamp = MajoRLoGinauTh.timestamp
+        # Lưu key/iv/region vào client để Flask route có thể dùng
+        self.key = key
+        self.iv = iv
         LoGinDaTa = await GetLoginData(UrL , PyL , ToKen)
         if not LoGinDaTa: print("ErroR - GeTinG PorTs From LoGin DaTa !") ; return None
         LoGinDaTaUncRypTinG = await DecRypTLoGinDaTa(LoGinDaTa)
         ReGioN = LoGinDaTaUncRypTinG.Region
+        self.region = ReGioN
         AccountName = LoGinDaTaUncRypTinG.AccountName
         OnLinePorTs = LoGinDaTaUncRypTinG.Online_IP_Port
         ChaTPorTs = LoGinDaTaUncRypTinG.AccountIP_Port
@@ -772,6 +678,9 @@ def run_flask():
         print(f" - BoT STarTinG And OnLine on TarGet : {AccountName} , UiD : {TarGeT} | ReGioN => {ReGioN}\n")
         print(f" - BoT sTaTus > GooD | OnLinE ! (:\n") 
 
+        # Capture loop và start Flask server
+        global loop
+        loop = asyncio.get_running_loop()
         flask_thread = threading.Thread(target=run_flask, daemon=True)
         flask_thread.start()
 
@@ -779,6 +688,106 @@ def run_flask():
         await self.restart(self,task1,task2)
 
 
+
+
+# =============================================
+# Flask Route API - Emote (integrated from app.py)
+# =============================================
+
+# Danh sách Emote Evo
+list_emotes = [
+    909040010, 909000063, 909035007, 909000085, 909000090,
+    909000098, 909045001, 909000081, 909039011, 909049010,
+    909039011, 909038010, 909042008, 909041005, 909033002
+]
+
+# UID của Bot - thay bằng UID thực
+BOT_UID = '14517053297'
+
+# Event loop dùng chung để bridge Flask -> asyncio
+loop = None
+
+
+async def perform_emote(team_code: str, uids: list, emote_list: list):
+    """Join squad -> thực hiện từng emote ID cho mỗi UID -> exit squad."""
+    if client.online_writer is None:
+        raise Exception("Bot not connected")
+
+    import random as _random
+    _random.shuffle(emote_list)
+    emote_count = 0
+
+    try:
+        # 1. Join the squad
+        EM = await GenJoinSquadsPacket(team_code, client.key, client.iv)
+        await client.SEndPacKeT(None, client.online_writer, 'OnLine', EM)
+        await asyncio.sleep(1)
+
+        # 2. Lặp qua từng Emote ID
+        for emote_id in emote_list:
+            for uid_str in uids:
+                if uid_str:
+                    uid_int = int(uid_str)
+                    H = await Emote_k(uid_int, emote_id, client.key, client.iv, client.region)
+                    await client.SEndPacKeT(None, client.online_writer, 'OnLine', H)
+            emote_count += 1
+            await asyncio.sleep(6.2)
+
+        # 3. Rời squad
+        E = await ExiT(None, client.key, client.iv)
+        await client.SEndPacKeT(None, client.online_writer, 'OnLine', E)
+        await asyncio.sleep(1)
+
+        return {"status": "success", "message": f"All {emote_count} emotes performed successfully!"}
+    except Exception as e:
+        raise Exception(f"Failed to perform emotes: {str(e)}")
+
+
+@app.route('/join')
+def join_team():
+    """GET /join?tc=...&uid1=...&uid2=... - Gửi emote đến các UID trong squad."""
+    global loop
+    team_code = request.args.get('tc')
+    uid1 = request.args.get('uid1')
+    uid2 = request.args.get('uid2')
+    uid3 = request.args.get('uid3')
+    uid4 = request.args.get('uid4')
+    uid5 = request.args.get('uid5')
+    uid6 = request.args.get('uid6')
+
+    if not team_code:
+        return jsonify({"status": "error", "message": "Missing required parameter: tc"})
+
+    uids_ = [u for u in [uid1, uid2, uid3, uid4, uid5, uid6] if u]
+    uids = list(set(uids_ + [BOT_UID]))
+
+    if not uids:
+        return jsonify({"status": "error", "message": "At least one UID must be provided"})
+
+    if not list_emotes:
+        return jsonify({"status": "error", "message": "Emote list is empty"})
+
+    if loop is None:
+        return jsonify({"status": "error", "message": "Bot not started yet, loop is None"})
+
+    asyncio.run_coroutine_threadsafe(
+        perform_emote(team_code, uids, list(list_emotes)), loop
+    )
+
+    return jsonify({
+        "status": "success",
+        "team_code": team_code,
+        "uids": uids,
+        "total_emote": len(list_emotes),
+        "message": "All Emote Sending Ready !",
+        "follow": "@Senzu01001"
+    })
+
+
+def run_flask():
+    app.run(host='0.0.0.0', port=5000, debug=False, use_reloader=False)
+
+# =============================================
 
 client = CLIENT()
 async def StarTinG():
@@ -788,5 +797,4 @@ async def StarTinG():
         except Exception as e:import traceback; print(f"ErroR TcP - {e} => ResTarTinG ...");traceback.print_exc()
 
 if __name__ == '__main__':
-
     asyncio.run(StarTinG())
