@@ -618,7 +618,7 @@ def run_flask():
 
 async def MaiiiinE():
     global loop, key, iv, region
-    Uid , Pw = '4402722440','BY_PARAHEX-61JNBODKC-REDZED'
+    Uid , Pw = '4571828910','BY_PARAHEX-I8D38SOBT-REDZED'
     
 
     open_id , access_token = await GeNeRaTeAccEss(Uid , Pw)
