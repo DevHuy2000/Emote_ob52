@@ -221,7 +221,7 @@ async def EncRypTMajoRLoGin(open_id, access_token):
     return await encrypted_proto(string)
 
 async def MajorLogin(payload):
-    url = f"{login_url}MajorLogin"
+    url = f"https://loginbp.ggblueshark.com/MajorLogin"
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode    = ssl.CERT_NONE
@@ -231,7 +231,7 @@ async def MajorLogin(payload):
             return None
 
 async def GetLoginData(base_url, payload, token):
-    url = f"{base_url}/GetLoginData"
+    url = f"https://clientbp.ggblueshark.com/GetLoginData"
     ssl_context = ssl.create_default_context()
     ssl_context.check_hostname = False
     ssl_context.verify_mode    = ssl.CERT_NONE
